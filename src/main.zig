@@ -3,14 +3,27 @@ const std = @import("std");
 const stdout = std.Io.File.stdout();
 const stdin = std.Io.File.stdin();
 
+const pts_path = "/dev/pts/";
+
 pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
     const io = init.io;
 
-    const input = try take_input(io, allocator);
-    defer allocator.free(input);
+    _ = allocator;
 
-    try print_input(io, allocator, input);
+    try tty_children(io);
+}
+
+fn tty_children(io: std.Io) !void {
+    //const tty = try std.Io.Dir.openFileAbsolute(io, "/dev/tty", .{ .mode = .read_write });
+    const pts = try std.Io.Dir.openDirAbsolute(io, pts_path, .{ .iterate = true });
+    var pts_iterator = pts.iterate();
+
+    //var list_children: [_]u8 = undefined;
+
+    while (try pts_iterator.next(io)) |children| {
+        std.debug.print("{s}\n", .{children.name});
+    }
 }
 
 fn take_input(io: std.Io, allocator: std.mem.Allocator) ![]u8 {
